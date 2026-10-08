@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <title>AI Traffic Center</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            background: #121212;
+            color: white;
+            font-family: sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        #display-screen {
+            width: 100%;
+            border: 4px solid #333;
+            background: #000;
+            display: none;
+            margin-top: 20px;
+        }
+
+        #summary-box {
+            display: none;
+            background: #222;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            border: 1px solid #f1c40f;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-upload {
+            background: #f1c40f;
+            color: black;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        #loader {
+            display: none;
+            color: #f1c40f;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🚨 AI Traffic Dashboard</h1>
+
+        <div class="demo-notice" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); padding: 16px; border-radius: 12px; margin-bottom: 24px; text-align: left; display: flex; flex-direction: column; gap: 8px;">
+            <span style="font-weight: 600; color: #ef4444; font-size: 1rem;">⚠️ ระบบวิเคราะห์ความเสี่ยงจำเป็นต้องรันร่วมกับเซิร์ฟเวอร์ Backend</span>
+            <span style="font-size: 0.9rem; color: #ccc; line-height: 1.4;">
+                หากเปิดไฟล์ HTML นี้โดยตรงจะไม่สามารถอัปโหลดวิดีโอได้ กรุณาดับเบิ้ลคลิกไฟล์ <strong>start.command</strong> ในโฟลเดอร์โปรเจกต์นี้ หรือเปิด Terminal แล้วรันคำสั่ง:
+            </span>
+            <code style="background: rgba(0, 0, 0, 0.4); padding: 8px 12px; border-radius: 6px; font-family: monospace; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.08); color: #fff; width: fit-content; align-self: flex-start;">source venv/bin/activate && python app.py</code>
+        </div>
+
+        <div id="setup-area">
+            <input type="file" id="fileInput" style="display: none;" onchange="startUpload()">
+            <button class="btn-upload" onclick="document.getElementById('fileInput').click()">+
+                เลือกวิดีโอเพื่อวิเคราะห์</button>
+            <p id="loader">⚙️ กำลังอัปโหลดและเตรียม AI... กรุณารอสักครู่</p>
+        </div>
+
+        <img id="display-screen" src="">
+
+        <div id="summary-box">
+            <h2 style="color: #f1c40f;">📊 รายงานสรุปความเสี่ยง</h2>
+            <div class="chart-container">
+                <canvas id="riskChart"></canvas>
+            </div>
+            <br>
+            <button class="btn-upload" onclick="location.reload()">วิเคราะห์ไฟล์ใหม่</button>
+        </div>
+    </div>
+
+    <script>
+        const display = document.getElementById('display-screen');
+        const summary = document.getElementById('summary-box');
+        const setupArea = document.getElementById('setup-area');
+        const loader = document.getElementById('loader');
+
+        let riskChart = new Chart(document.getElementById('riskChart'), {
+            type: 'bar',
+            data: { labels: [], datasets: [{ label: 'คะแนนความเสี่ยง (Risk Score)', data: [], backgroundColor: '#e74c3c' }] },
+            options: { scales: { y: { beginAtZero: true } } }
+        });
+
+        async function startUpload() {
+            const file = document.getElementById('fileInput').files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            loader.style.display = "block";
+
+            try {
+                const res = await fetch('/upload', { method: 'POST', body: formData });
+                const data = await res.json();
+
+                if (data.status === "success") {
+                    alert("✅ " + data.message);
+                    loader.style.display = "none";
+                    setupArea.style.display = "none";
+                    display.style.display = "block";
+                    runAI(); // เริ่มขอเฟรม
+                }
+            } catch (e) {
+                alert("❌ เชื่อมต่อเซิร์ฟเวอร์ไม่ได้");
+                loader.style.display = "none";
+            }
+        }
+
+        async function runAI() {
+            const res = await fetch('/get_next_frame');
+            const data = await res.json();
+
+            if (data.finished) {
+                // จบคลิป: สลับหน้าจอ
+                display.style.display = "none";
+                summary.style.display = "block";
+                return;
+            }
+
+            // แสดงภาพ Base64
+            display.src = "data:image/jpeg;base64," + data.image;
+
+            // อัปเดตข้อมูลกราฟ (Real-time)
+            riskChart.data.labels = data.stats.ids;
+            riskChart.data.datasets[0].data = data.stats.scores;
+            riskChart.update('none'); // อัปเดตแบบไม่ใส่ animation เพื่อความเร็ว
+
+            // วนลูปขอเฟรมถัดไป
+            requestAnimationFrame(runAI);
+        }
+    </script>
+</body>
+
+</html>

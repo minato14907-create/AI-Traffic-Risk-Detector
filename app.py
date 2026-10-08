@@ -36,6 +36,14 @@ app.config['SNAPSHOT_FOLDER'] = 'snapshots'
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(app.config['SNAPSHOT_FOLDER'], exist_ok=True)
 
+@app.after_request
+def add_header(r):
+    r.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    r.headers["Pragma"] = "no-cache"
+    r.headers["Expires"] = "0"
+    r.headers['Cache-Control'] = 'public, max-age=0'
+    return r
+
 # COCO class IDs สำหรับยานพาหนะ
 VEHICLE_CLASSES = [1, 2, 3, 5, 7]
 VEHICLE_NAMES = {1: 'Bike', 2: 'Car', 3: 'Moto', 5: 'Bus', 7: 'Truck'}

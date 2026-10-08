@@ -420,7 +420,6 @@ const ctx2d       = canvas.getContext('2d');
 let frameCount = 0;
 let isPaused   = false;
 let liveChart  = null;
-let autoTimer  = null;
 let roiMode    = false;
 let lineMode   = false;
 let roiPoints  = [];
@@ -441,7 +440,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     const d = await r.json();
     if (d.files && d.files.length > 0) {
       renderFileList(d.files);
-      startAutoLoad(d.files[0].name);
     }
   } catch(e) {}
 });
@@ -456,27 +454,18 @@ function renderFileList(files){
   btns.innerHTML = '';
   files.forEach((f,i) => {
     const b = document.createElement('button');
-    b.className = 'file-btn' + (i===0?' active':'');
+    b.className = 'file-btn';
     b.innerHTML = `<div class="fn">🎬 ${f.name}</div><div class="fs">${fmtSize(f.size)}</div>`;
-    b.onclick = () => loadExisting(f.name);
+    b.onclick = () => loadExisting(f.name, b);
     btns.appendChild(b);
   });
 }
 
-function startAutoLoad(name){
-  let n = 3;
-  const el = document.getElementById('countdown');
-  el.textContent = `⏱ ${n}s`;
-  autoTimer = setInterval(() => {
-    n--;
-    if(n <= 0){ clearInterval(autoTimer); autoTimer=null; el.textContent=''; loadExisting(name); }
-    else el.textContent = `⏱ ${n}s`;
-  }, 1000);
-}
+async function loadExisting(name, btnElement){
+  // Highlight the selected button and remove active class from others
+  document.querySelectorAll('.file-btn').forEach(btn => btn.classList.remove('active'));
+  if (btnElement) btnElement.classList.add('active');
 
-async function loadExisting(name){
-  if(autoTimer){ clearInterval(autoTimer); autoTimer=null; }
-  document.getElementById('countdown').textContent = '';
   loader.style.display = 'block';
   const r = await fetch('/load_existing',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({filename:name})});
   const d = await r.json();
@@ -486,7 +475,6 @@ async function loadExisting(name){
 }
 
 async function startUpload(){
-  if(autoTimer){ clearInterval(autoTimer); autoTimer=null; }
   const file = document.getElementById('fileInput').files[0];
   if(!file) return;
   const fd = new FormData(); fd.append('file', file);

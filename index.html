@@ -245,9 +245,15 @@
             <p>ระบบวิเคราะห์พฤติกรรมเสี่ยงบนท้องถนน ด้วย YOLOv8 + Object Tracking แบบเรียกไทม์</p>
         </header>
 
-        <div class="demo-notice">
-            <span>ℹ️</span>
-            <span>Demo Version - รันบน localhost หรือ Railway เพื่อทดสอบฟังก์ชันจริง</span>
+        <div class="demo-notice" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); padding: 20px; border-radius: 12px; margin-bottom: 24px; display: flex; align-items: flex-start; gap: 16px;">
+            <span style="font-size: 1.5rem; line-height: 1;">⚠️</span>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <span style="font-weight: 600; color: var(--accent-red); font-size: 1rem;">หน้าเว็บนี้เป็นเพียงหน้าตัวอย่าง Demo</span>
+                <span style="font-size: 0.9rem; color: var(--text-primary); line-height: 1.5;">
+                    หากต้องการเปิดใช้งานระบบตรวจจับจริง กรุณาดับเบิ้ลคลิกไฟล์ <strong>start.command</strong> ในโฟลเดอร์โปรเจกต์นี้ หรือเปิด Terminal แล้วรันคำสั่งด้านล่าง จากนั้นเปิดเบราว์เซอร์ไปที่ <strong>http://localhost:8000</strong>
+                </span>
+                <code style="background: rgba(0, 0, 0, 0.4); padding: 8px 12px; border-radius: 6px; font-family: 'JetBrains Mono'; font-size: 0.82rem; border: 1px solid var(--border-color); color: #fff; width: fit-content;">source venv/bin/activate && python app.py</code>
+            </div>
         </div>
 
         <div class="card">
@@ -350,7 +356,7 @@
 
             <div class="live-chart-section">
                 <div class="live-chart-header">
-                    <h3>📈 กราฟความเสี่ยงแบบเรียลไทม์</h3>
+                    <h3> กราฟความเสี่ยงแบบเรียลไทม์</h3>
                 </div>
                 <div class="live-chart-container">
                     <canvas id="liveChart"></canvas>
